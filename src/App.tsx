@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense, lazy } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { GameMode } from './types/game';
 import MultiplayerLobby from './components/game/MultiplayerLobby';
@@ -6,7 +6,6 @@ import MultiplayerGameShell from './components/game/MultiplayerGameShell';
 import GameShell from './components/game/GameShell';
 import NeonButton from './components/ui/NeonButton';
 
-const VaultScene = lazy(() => import('./components/three/VaultScene'));
 
 export default function App() {
   const [activeRoom, setActiveRoom] = useState<any | null>(null);
@@ -14,8 +13,16 @@ export default function App() {
   const [playerName, setPlayerName] = useState('');
   const [isNameSubmitted, setIsNameSubmitted] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [initialJoinCode, setInitialJoinCode] = useState<string | null>(null);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const roomParam = params.get('room');
+    if (roomParam) {
+      setInitialJoinCode(roomParam.toUpperCase());
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     const savedName = localStorage.getItem('number-heist-player-name');
     if (savedName) {
       setPlayerName(savedName);
@@ -73,8 +80,8 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen relative z-10">
-      <div className="flex flex-col items-center px-4 pt-8 pb-4">
+    <main className="min-h-screen flex items-center justify-center relative z-10">
+      <div className="flex flex-col items-center w-full px-4 py-8">
         <motion.div
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -82,12 +89,9 @@ export default function App() {
           className="text-center mb-4"
         >
           <h1
-            className="text-4xl md:text-6xl lg:text-7xl font-black tracking-widest mb-4"
+            className="text-5xl md:text-7xl lg:text-8xl font-black tracking-widest mb-2 cyber-title text-white"
             style={{
               fontFamily: "'Orbitron', sans-serif",
-              background: 'linear-gradient(to bottom right, #ffffff, #71717a)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
             }}
           >
             NUMBER HEIST
@@ -103,27 +107,7 @@ export default function App() {
           </motion.p>
         </motion.div>
 
-        <AnimatePresence mode="wait">
-          {!isNameSubmitted && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              className="w-full max-w-2xl mb-6"
-            >
-              <Suspense fallback={
-                <div className="w-full h-[300px] md:h-[400px] flex items-center justify-center">
-                  <div className="text-sm animate-pulse" style={{ color: 'var(--neon-blue)' }}>
-                    Loading vault...
-                  </div>
-                </div>
-              }>
-                <VaultScene />
-              </Suspense>
-            </motion.div>
-          )}
-        </AnimatePresence>
+
 
         <AnimatePresence mode="wait">
           {!isNameSubmitted ? (
@@ -183,6 +167,7 @@ export default function App() {
 
               <MultiplayerLobby
                 playerName={playerName}
+                initialJoinCode={initialJoinCode}
                 onGameStart={(room) => setActiveRoom(room)}
                 onSoloMode={(mode) => setSelectedSoloMode(mode)}
                 onBack={() => setIsNameSubmitted(false)}

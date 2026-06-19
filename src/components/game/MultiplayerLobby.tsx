@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Gamepad2, Server, Users, ArrowRight } from 'lucide-react';
 import NeonButton from '../ui/NeonButton';
 import GlassCard from '../ui/GlassCard';
 import { socket } from '../../lib/socket';
@@ -7,7 +8,7 @@ import type { GameMode } from '../../types/game';
 import { MODE_LABELS } from '../../types/game';
 import ModeSelector from './ModeSelector';
 
-const VaultScene = lazy(() => import('../three/VaultScene'));
+
 
 interface Player {
     id: string;
@@ -29,14 +30,16 @@ interface RoomState {
 
 interface MultiplayerLobbyProps {
     playerName: string;
+    initialJoinCode?: string | null;
     onGameStart: (room: RoomState) => void;
     onSoloMode: (mode: GameMode) => void;
     onBack: () => void;
 }
 
-export default function MultiplayerLobby({ playerName, onGameStart, onSoloMode, onBack: _onBack }: MultiplayerLobbyProps) {
-    const [lobbyView, setLobbyView] = useState<'menu' | 'create' | 'join' | 'in-room' | 'solo-select'>('menu');
-    const [joinCode, setJoinCode] = useState('');
+export default function MultiplayerLobby({ playerName, onGameStart, onSoloMode, onBack: _onBack, initialJoinCode }: MultiplayerLobbyProps) {
+    const [lobbyView, setLobbyView] = useState<'menu' | 'create' | 'join' | 'in-room' | 'solo-select'>(initialJoinCode ? 'join' : 'menu');
+    const [joinCode, setJoinCode] = useState(initialJoinCode || '');
+    const [invitePhone, setInvitePhone] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
     const [roomState, setRoomState] = useState<RoomState | null>(null);
     const [countdown, setCountdown] = useState<number | null>(null);
@@ -61,71 +64,62 @@ export default function MultiplayerLobby({ playerName, onGameStart, onSoloMode, 
             socket.emit('rejoin_room', { roomId: savedRoom, playerName: savedName });
         }
 
-        // room_created: Host created a room
-        socket.on('room_created', (room) => {
+        const handleRoomCreated = (room: RoomState) => {
             sessionStorage.setItem('mp_room_id', room.id);
             sessionStorage.setItem('mp_player_name', playerName);
             setRoomState(room);
             setLobbyView('in-room');
-        });
+        };
 
-        // room_joined: Player 2 joined successfully
-        socket.on('room_joined', (room) => {
+        const handleRoomJoined = (room: RoomState) => {
             sessionStorage.setItem('mp_room_id', room.id);
             sessionStorage.setItem('mp_player_name', playerName);
             setRoomState(room);
             setLobbyView('in-room');
             setIsJoining(false);
-        });
+        };
 
-        // room_rejoined: Successful rejoin after page refresh
-        socket.on('room_rejoined', (room) => {
+        const handleRoomRejoined = (room: RoomState) => {
             console.log('[Lobby] Rejoined room:', room.id);
             setRoomState(room);
             setLobbyView('in-room');
-        });
+        };
 
-        // rejoin_failed: Grace period expired or room gone
-        socket.on('rejoin_failed', ({ reason }: { reason: string }) => {
+        const handleRejoinFailed = ({ reason }: { reason: string }) => {
             console.warn('[Lobby] Rejoin failed:', reason);
             sessionStorage.removeItem('mp_room_id');
             sessionStorage.removeItem('mp_player_name');
             setErrorMsg(reason === 'room_gone' ? 'Room expired — please create or join a new one.' : 'Could not rejoin. Please join again.');
-        });
+        };
 
-        // room_updated: Any state change
-        socket.on('room_updated', (room) => {
+        const handleRoomUpdated = (room: RoomState) => {
             setRoomState(room);
-        });
+        };
 
-        socket.on('countdown_step', (count) => {
+        const handleCountdownStep = (count: number) => {
             setCountdown(count);
-        });
+        };
 
-        // game_started: Use ref to get fresh roomState (avoid stale closure)
-        socket.on('game_started', () => {
+        const handleGameStarted = () => {
             const currentRoom = roomStateRef.current;
             if (currentRoom) onGameStartRef.current(currentRoom);
-        });
+        };
 
-        // opponent_left: Other player intentionally left or timed out
-        socket.on('opponent_left', ({ name }: { name: string }) => {
+        const handleOpponentLeft = ({ name }: { name: string }) => {
             setErrorMsg(`${name} left the room.`);
-            setLobbyView('in-room'); // stay in room, let host ready again
-        });
+            setLobbyView('in-room');
+        };
 
-        // opponent_reconnected: Other player came back after refresh
-        socket.on('opponent_reconnected', ({ name }: { name: string }) => {
-            setErrorMsg(''); // clear any disconnecting warning
+        const handleOpponentReconnected = ({ name }: { name: string }) => {
+            setErrorMsg('');
             console.log(`[Lobby] ${name} reconnected`);
-        });
+        };
 
-        // opponent_disconnecting: Other player disconnected (grace period started)
-        socket.on('opponent_disconnecting', ({ name }: { name: string }) => {
+        const handleOpponentDisconnecting = ({ name }: { name: string }) => {
             setErrorMsg(`${name} disconnected — waiting for them to reconnect...`);
-        });
+        };
 
-        socket.on('error', (msg) => {
+        const handleError = (msg: string) => {
             setErrorMsg(msg);
             setIsJoining(false);
             setLobbyView(prev => {
@@ -135,23 +129,35 @@ export default function MultiplayerLobby({ playerName, onGameStart, onSoloMode, 
                 }
                 return prev;
             });
-        });
+        };
+
+        socket.on('room_created', handleRoomCreated);
+        socket.on('room_joined', handleRoomJoined);
+        socket.on('room_rejoined', handleRoomRejoined);
+        socket.on('rejoin_failed', handleRejoinFailed);
+        socket.on('room_updated', handleRoomUpdated);
+        socket.on('countdown_step', handleCountdownStep);
+        socket.on('game_started', handleGameStarted);
+        socket.on('opponent_left', handleOpponentLeft);
+        socket.on('opponent_reconnected', handleOpponentReconnected);
+        socket.on('opponent_disconnecting', handleOpponentDisconnecting);
+        socket.on('error', handleError);
 
         return () => {
-            socket.off('room_created');
-            socket.off('room_joined');
-            socket.off('room_rejoined');
-            socket.off('rejoin_failed');
-            socket.off('room_updated');
-            socket.off('countdown_step');
-            socket.off('game_started');
-            socket.off('opponent_left');
-            socket.off('opponent_reconnected');
-            socket.off('opponent_disconnecting');
-            socket.off('error');
+            socket.off('room_created', handleRoomCreated);
+            socket.off('room_joined', handleRoomJoined);
+            socket.off('room_rejoined', handleRoomRejoined);
+            socket.off('rejoin_failed', handleRejoinFailed);
+            socket.off('room_updated', handleRoomUpdated);
+            socket.off('countdown_step', handleCountdownStep);
+            socket.off('game_started', handleGameStarted);
+            socket.off('opponent_left', handleOpponentLeft);
+            socket.off('opponent_reconnected', handleOpponentReconnected);
+            socket.off('opponent_disconnecting', handleOpponentDisconnecting);
+            socket.off('error', handleError);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Register once on mount — refs handle fresh values
+    }, []);
 
 
     const handleCreateClick = () => {
@@ -216,25 +222,64 @@ export default function MultiplayerLobby({ playerName, onGameStart, onSoloMode, 
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
-                    className="flex flex-col md:flex-row gap-6 w-full max-w-4xl justify-center items-stretch"
+                    className="flex flex-col gap-4 w-full max-w-lg mx-auto"
                 >
-                    <GlassCard className="flex-1 p-8 flex flex-col items-center justify-center text-center group">
-                        <h3 className="text-sm font-semibold mb-3 tracking-[0.2em] text-white/90 uppercase">Solo Mode</h3>
-                        <p className="text-xs text-white/40 mb-8 font-mono">Immediate access. Perfect for training.</p>
-                        <NeonButton color="green" onClick={() => setLobbyView('solo-select')} className="w-full">TRAIN SOLO</NeonButton>
-                    </GlassCard>
+                    <button
+                        onClick={() => setLobbyView('solo-select')}
+                        className="group relative w-full p-1 rounded-2xl overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] opacity-50 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative bg-black/80 backdrop-blur-xl p-6 rounded-xl flex items-center justify-between border border-white/10 group-hover:bg-black/60 transition-colors">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-white/5 rounded-lg text-[#00ff88] group-hover:scale-110 transition-transform">
+                                    <Gamepad2 size={32} />
+                                </div>
+                                <div className="text-left">
+                                    <h3 className="text-xl font-bold tracking-widest text-white uppercase font-mono">Solo Training</h3>
+                                    <p className="text-xs text-white/50 tracking-widest mt-1">Play offline and hone your skills</p>
+                                </div>
+                            </div>
+                            <ArrowRight className="text-[#00ff88] opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                        </div>
+                    </button>
 
-                    <GlassCard className="flex-1 p-8 flex flex-col items-center justify-center text-center group">
-                        <h3 className="text-sm font-semibold mb-3 tracking-[0.2em] text-white/90 uppercase">Create Room</h3>
-                        <p className="text-xs text-white/40 mb-8 font-mono">Host a match and select the game mode.</p>
-                        <NeonButton color="blue" onClick={handleCreateClick} className="w-full">HOST ROOM</NeonButton>
-                    </GlassCard>
+                    <button
+                        onClick={handleCreateClick}
+                        className="group relative w-full p-1 rounded-2xl overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#b44dff] to-[#ff3366] opacity-50 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative bg-black/80 backdrop-blur-xl p-6 rounded-xl flex items-center justify-between border border-white/10 group-hover:bg-black/60 transition-colors">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-white/5 rounded-lg text-[#ff3366] group-hover:scale-110 transition-transform">
+                                    <Server size={32} />
+                                </div>
+                                <div className="text-left">
+                                    <h3 className="text-xl font-bold tracking-widest text-white uppercase font-mono">Host Match</h3>
+                                    <p className="text-xs text-white/50 tracking-widest mt-1">Create a room and invite a friend</p>
+                                </div>
+                            </div>
+                            <ArrowRight className="text-[#ff3366] opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                        </div>
+                    </button>
 
-                    <GlassCard className="flex-1 p-8 flex flex-col items-center justify-center text-center group">
-                        <h3 className="text-sm font-semibold mb-3 tracking-[0.2em] text-white/90 uppercase">Join Room</h3>
-                        <p className="text-xs text-white/40 mb-8 font-mono">Join an existing match via access code.</p>
-                        <NeonButton color="purple" onClick={handleJoinClick} className="w-full">JOIN PLAYER</NeonButton>
-                    </GlassCard>
+                    <button
+                        onClick={handleJoinClick}
+                        className="group relative w-full p-1 rounded-2xl overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#00d4ff] to-[#b44dff] opacity-50 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative bg-black/80 backdrop-blur-xl p-6 rounded-xl flex items-center justify-between border border-white/10 group-hover:bg-black/60 transition-colors">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-white/5 rounded-lg text-[#00d4ff] group-hover:scale-110 transition-transform">
+                                    <Users size={32} />
+                                </div>
+                                <div className="text-left">
+                                    <h3 className="text-xl font-bold tracking-widest text-white uppercase font-mono">Join Match</h3>
+                                    <p className="text-xs text-white/50 tracking-widest mt-1">Enter a room code to battle</p>
+                                </div>
+                            </div>
+                            <ArrowRight className="text-[#00d4ff] opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                        </div>
+                    </button>
                 </motion.div>
             )}
 
@@ -352,8 +397,32 @@ export default function MultiplayerLobby({ playerName, onGameStart, onSoloMode, 
                         })}
                         {/* Empty slot if less than 2 players */}
                         {Array.from({ length: 2 - roomState.players.length }).map((_, i) => (
-                            <GlassCard key={`empty-${i}`} className="p-6 flex items-center justify-center opacity-50 border-dashed">
-                                <p className="text-gray-500 uppercase tracking-widest font-bold text-sm">WAITING FOR OPPONENT...</p>
+                            <GlassCard key={`empty-${i}`} className="p-6 flex flex-col items-center justify-center border-dashed">
+                                <p className="text-gray-500 uppercase tracking-widest font-bold text-sm mb-6">WAITING FOR OPPONENT...</p>
+                                
+                                <div className="w-full max-w-xs space-y-3">
+                                    <p className="text-[10px] text-white/40 uppercase tracking-[0.2em] text-center border-b border-white/5 pb-2 mb-2">Invite via WhatsApp</p>
+                                    <div className="flex gap-2">
+                                        <input 
+                                            type="text" 
+                                            placeholder="Phone (e.g. 919876543210)" 
+                                            value={invitePhone}
+                                            onChange={(e) => setInvitePhone(e.target.value.replace(/\D/g, ''))}
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-[#25D366] transition-colors text-xs font-mono placeholder:text-white/20"
+                                        />
+                                        <button 
+                                            onClick={() => {
+                                                if(invitePhone.length > 5) {
+                                                    const text = encodeURIComponent(`Hey! Join my Number Heist match.\nRoom Code: ${roomState.id}\nLink: ${window.location.origin}/?room=${roomState.id}`);
+                                                    window.open(`https://wa.me/${invitePhone}?text=${text}`, '_blank');
+                                                }
+                                            }}
+                                            className="bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 rounded-lg px-4 hover:bg-[#25D366]/20 transition-colors text-xs uppercase tracking-widest font-bold"
+                                        >
+                                            Send
+                                        </button>
+                                    </div>
+                                </div>
                             </GlassCard>
                         ))}
                     </div>
@@ -388,11 +457,7 @@ export default function MultiplayerLobby({ playerName, onGameStart, onSoloMode, 
                 </motion.div>
             )}
 
-            <div className="w-full h-[180px] md:h-[220px] mt-8 relative z-0">
-                <Suspense fallback={null}>
-                    <VaultScene />
-                </Suspense>
-            </div>
+
         </div>
     );
 }

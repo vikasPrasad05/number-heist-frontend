@@ -59,27 +59,26 @@ export default function MultiplayerGameShell({ roomState: initialRoomState, play
     useEffect(() => { roomStateRef.current = roomState; }, [roomState]);
 
     useEffect(() => {
-        socket.on('room_updated', (updatedRoom) => {
+        const handleRoomUpdated = (updatedRoom: RoomState) => {
             setRoomState(updatedRoom);
             if (updatedRoom.status === 'results' || updatedRoom.status === 'ended') {
                 setIsGameOver(true);
             }
-        });
+        };
 
-        socket.on('sync_puzzle', (data) => {
+        const handleSyncPuzzle = (data: { puzzle: Puzzle }) => {
             setPuzzle(data.puzzle);
             setIsLocked(false);
             setRoundWinner(null);
             setFeedback(null);
-        });
+        };
 
-        socket.on('round_end', (data) => {
+        const handleRoundEnd = (data: { winnerName: string }) => {
             setRoundWinner(data.winnerName);
             setIsLocked(true);
-        });
+        };
 
-        // Host publishes puzzle at the start of each round
-        socket.on('round_start', (data) => {
+        const handleRoundStart = (data: { round: number }) => {
             setRoundWinner(null);
             setPuzzle(null);
             if (isHostRef.current) {
@@ -88,70 +87,78 @@ export default function MultiplayerGameShell({ roomState: initialRoomState, play
                 const newPuzzle = generatePuzzle(room.mode, level);
                 socket.emit('publish_puzzle', { roomId: room.id, puzzle: newPuzzle });
             }
-        });
+        };
 
-        // Host also publishes the very first puzzle when game_started fires
-        socket.on('game_started', () => {
+        const handleGameStarted = () => {
             if (isHostRef.current) {
                 const room = roomStateRef.current;
                 const level = 1;
                 const newPuzzle = generatePuzzle(room.mode, level);
                 socket.emit('publish_puzzle', { roomId: room.id, puzzle: newPuzzle });
             }
-        });
+        };
 
-        socket.on('player_wrong', (data) => {
+        const handlePlayerWrong = (data: { id: string }) => {
             if (data.id === socket.id) {
                 setFeedback('wrong');
                 setTimeout(() => setFeedback(null), 1000);
             }
-        });
+        };
 
-        socket.on('game_over', () => {
+        const handleGameOver = () => {
             setIsGameOver(true);
-        });
+        };
 
-        // opponent_left: Other player intentionally left or timed out after grace period
-        socket.on('opponent_left', () => {
+        const handleOpponentLeft = () => {
             setOpponentDisconnected(true);
             setIsGameOver(true);
             sessionStorage.removeItem('mp_room_id');
             sessionStorage.removeItem('mp_player_name');
-        });
+        };
 
-        // opponent_disconnecting: Opponent lost connection, grace period started
-        socket.on('opponent_disconnecting', () => {
+        const handleOpponentDisconnecting = () => {
             setOpponentReconnecting(true);
-        });
+        };
 
-        // opponent_reconnected: Opponent came back during grace period
-        socket.on('opponent_reconnected', () => {
+        const handleOpponentReconnected = () => {
             setOpponentReconnecting(false);
-        });
+        };
 
-        // Keep old error handler for any other errors
-        socket.on('error', (msg) => {
+        const handleError = (msg: string) => {
             console.warn('[GameShell] socket error:', msg);
-        });
+        };
 
-        socket.on('sudden_death', () => {
+        const handleSuddenDeath = () => {
             setSuddenDeath(true);
             setTimeout(() => setSuddenDeath(false), 3000);
-        });
+        };
+
+        socket.on('room_updated', handleRoomUpdated);
+        socket.on('sync_puzzle', handleSyncPuzzle);
+        socket.on('round_end', handleRoundEnd);
+        socket.on('round_start', handleRoundStart);
+        socket.on('game_started', handleGameStarted);
+        socket.on('player_wrong', handlePlayerWrong);
+        socket.on('game_over', handleGameOver);
+        socket.on('opponent_left', handleOpponentLeft);
+        socket.on('opponent_disconnecting', handleOpponentDisconnecting);
+        socket.on('opponent_reconnected', handleOpponentReconnected);
+        socket.on('error', handleError);
+        socket.on('sudden_death', handleSuddenDeath);
 
         return () => {
-            socket.off('room_updated');
-            socket.off('sync_puzzle');
-            socket.off('round_end');
-            socket.off('round_start');
-            socket.off('game_started');
-            socket.off('player_wrong');
-            socket.off('game_over');
-            socket.off('opponent_left');
-            socket.off('opponent_disconnecting');
-            socket.off('opponent_reconnected');
-            socket.off('error');
-            socket.off('sudden_death');
+            socket.off('room_updated', handleRoomUpdated);
+            socket.off('sync_puzzle', handleSyncPuzzle);
+            socket.off('round_end', handleRoundEnd);
+            socket.off('round_start', handleRoundStart);
+            socket.off('game_started', handleGameStarted);
+            socket.off('player_wrong', handlePlayerWrong);
+            socket.off('game_over', handleGameOver);
+            socket.off('opponent_left', handleOpponentLeft);
+            socket.off('opponent_disconnecting', handleOpponentDisconnecting);
+            socket.off('opponent_reconnected', handleOpponentReconnected);
+            socket.off('error', handleError);
+            socket.off('sudden_death', handleSuddenDeath);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Listeners registered once — refs keep values fresh
@@ -288,10 +295,31 @@ export default function MultiplayerGameShell({ roomState: initialRoomState, play
     return (
         <div className="min-h-screen flex flex-col relative">
             <div className="sticky top-0 z-30 px-4 py-4 backdrop-blur-md bg-black/50 border-b border-white/10">
-                <div className="max-w-4xl mx-auto flex justify-between gap-4 items-center">
-                    <div className="flex flex-col">
-                        <span className="text-[10px] uppercase text-gray-400 tracking-widest">{me?.name || 'YOU'}</span>
-                        <span className="text-xl font-bold text-[#00d4ff] font-mono">{me?.score.toLocaleString()}</span>
+                <div className="max-w-4xl mx-auto flex justify-between gap-2 md:gap-4 items-center">
+                    <div className="flex items-center gap-2 md:gap-4">
+                        <motion.button
+                            onClick={() => {
+                                socket.emit('leave_room');
+                                sessionStorage.removeItem('mp_room_id');
+                                sessionStorage.removeItem('mp_player_name');
+                                onExit();
+                            }}
+                            className="text-xs md:text-sm px-2 py-1 md:px-3 rounded-lg flex-shrink-0"
+                            style={{
+                                background: 'rgba(255, 51, 102, 0.1)',
+                                border: '1px solid rgba(255, 51, 102, 0.3)',
+                                color: 'var(--neon-red)',
+                            }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            title="Exit Game"
+                        >
+                            ← <span className="hidden sm:inline">Exit</span>
+                        </motion.button>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] uppercase text-gray-400 tracking-widest">{me?.name || 'YOU'}</span>
+                            <span className="text-xl font-bold text-[#00d4ff] font-mono">{me?.score.toLocaleString()}</span>
+                        </div>
                     </div>
 
                     <div className="flex flex-col items-center">
