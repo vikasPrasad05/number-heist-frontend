@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, Server, Users, ArrowRight } from 'lucide-react';
+import { Gamepad2, Server, Users, ArrowRight, ArrowLeft } from 'lucide-react';
 import NeonButton from '../ui/NeonButton';
 import GlassCard from '../ui/GlassCard';
 import { socket } from '../../lib/socket';
@@ -215,71 +215,105 @@ export default function MultiplayerLobby({ playerName, onGameStart, onSoloMode, 
                 )}
             </AnimatePresence>
 
-            {/* MENU VIEW */}
+            {/* MENU VIEW - Clean Beautiful Cards without bottom CTA lines */}
             {lobbyView === 'menu' && (
                 <motion.div
                     key="menu"
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex flex-col gap-4 w-full max-w-lg mx-auto"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.4 }}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full max-w-4xl mx-auto"
                 >
-                    <button
+                    {/* Card 1: Solo Practice */}
+                    <motion.div
+                        whileHover={{ y: -5, scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                         onClick={() => setLobbyView('solo-select')}
-                        className="group relative w-full p-1 rounded-2xl overflow-hidden"
+                        className="glass-card p-7 md:p-8 rounded-3xl relative overflow-hidden cursor-pointer group flex flex-col items-center justify-center text-center border border-emerald-400/20 hover:border-emerald-400/50 shadow-xl transition-all duration-300 min-h-[220px]"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] opacity-50 group-hover:opacity-100 transition-opacity" />
-                        <div className="relative bg-black/80 backdrop-blur-xl p-6 rounded-xl flex items-center justify-between border border-white/10 group-hover:bg-black/60 transition-colors">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-white/5 rounded-lg text-[#00ff88] group-hover:scale-110 transition-transform">
-                                    <Gamepad2 size={32} />
-                                </div>
-                                <div className="text-left">
-                                    <h3 className="text-xl font-bold tracking-widest text-white uppercase font-mono">Solo Training</h3>
-                                    <p className="text-xs text-white/50 tracking-widest mt-1">Play offline and hone your skills</p>
-                                </div>
+                        {/* Top Gradient Bar */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-400" />
+                        
+                        {/* Top Badge */}
+                        <span className="absolute top-4 right-4 px-3 py-1 rounded-full text-[9px] font-bold tracking-wider uppercase bg-emerald-400/10 text-emerald-300 border border-emerald-400/30">
+                            OFFLINE
+                        </span>
+                        
+                        <div className="flex flex-col items-center justify-center w-full py-2">
+                            <div className="p-3.5 bg-emerald-400/10 rounded-2xl text-emerald-400 group-hover:scale-110 group-hover:bg-emerald-400/20 transition-all mb-4">
+                                <Gamepad2 size={30} />
                             </div>
-                            <ArrowRight className="text-[#00ff88] opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                        </div>
-                    </button>
 
-                    <button
+                            <h3 className="text-xl font-extrabold text-white mb-2 tracking-wide text-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                                Solo Practice
+                            </h3>
+                            <p className="text-xs leading-relaxed text-slate-300/80 font-normal text-center max-w-[220px]">
+                                Play offline & sharpen your math skills across 6 puzzle modes.
+                            </p>
+                        </div>
+                    </motion.div>
+
+                    {/* Card 2: Create Room */}
+                    <motion.div
+                        whileHover={{ y: -5, scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                         onClick={handleCreateClick}
-                        className="group relative w-full p-1 rounded-2xl overflow-hidden"
+                        className="glass-card p-7 md:p-8 rounded-3xl relative overflow-hidden cursor-pointer group flex flex-col items-center justify-center text-center border border-purple-400/20 hover:border-purple-400/50 shadow-xl transition-all duration-300 min-h-[220px]"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#b44dff] to-[#ff3366] opacity-50 group-hover:opacity-100 transition-opacity" />
-                        <div className="relative bg-black/80 backdrop-blur-xl p-6 rounded-xl flex items-center justify-between border border-white/10 group-hover:bg-black/60 transition-colors">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-white/5 rounded-lg text-[#ff3366] group-hover:scale-110 transition-transform">
-                                    <Server size={32} />
-                                </div>
-                                <div className="text-left">
-                                    <h3 className="text-xl font-bold tracking-widest text-white uppercase font-mono">Host Match</h3>
-                                    <p className="text-xs text-white/50 tracking-widest mt-1">Create a room and invite a friend</p>
-                                </div>
+                        {/* Top Gradient Bar */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-400 to-pink-400" />
+                        
+                        {/* Top Badge */}
+                        <span className="absolute top-4 right-4 px-3 py-1 rounded-full text-[9px] font-bold tracking-wider uppercase bg-purple-400/10 text-purple-300 border border-purple-400/30">
+                            MULTIPLAYER
+                        </span>
+                        
+                        <div className="flex flex-col items-center justify-center w-full py-2">
+                            <div className="p-3.5 bg-purple-400/10 rounded-2xl text-purple-400 group-hover:scale-110 group-hover:bg-purple-400/20 transition-all mb-4">
+                                <Server size={30} />
                             </div>
-                            <ArrowRight className="text-[#ff3366] opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                        </div>
-                    </button>
 
-                    <button
-                        onClick={handleJoinClick}
-                        className="group relative w-full p-1 rounded-2xl overflow-hidden"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#00d4ff] to-[#b44dff] opacity-50 group-hover:opacity-100 transition-opacity" />
-                        <div className="relative bg-black/80 backdrop-blur-xl p-6 rounded-xl flex items-center justify-between border border-white/10 group-hover:bg-black/60 transition-colors">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-white/5 rounded-lg text-[#00d4ff] group-hover:scale-110 transition-transform">
-                                    <Users size={32} />
-                                </div>
-                                <div className="text-left">
-                                    <h3 className="text-xl font-bold tracking-widest text-white uppercase font-mono">Join Match</h3>
-                                    <p className="text-xs text-white/50 tracking-widest mt-1">Enter a room code to battle</p>
-                                </div>
-                            </div>
-                            <ArrowRight className="text-[#00d4ff] opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                            <h3 className="text-xl font-extrabold text-white mb-2 tracking-wide text-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                                Create Room
+                            </h3>
+                            <p className="text-xs leading-relaxed text-slate-300/80 font-normal text-center max-w-[220px]">
+                                Host a live game room & invite friends for a live battle.
+                            </p>
                         </div>
-                    </button>
+                    </motion.div>
+
+                    {/* Card 3: Join Room */}
+                    <motion.div
+                        whileHover={{ y: -5, scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                        onClick={handleJoinClick}
+                        className="glass-card p-7 md:p-8 rounded-3xl relative overflow-hidden cursor-pointer group flex flex-col items-center justify-center text-center border border-sky-400/20 hover:border-sky-400/50 shadow-xl transition-all duration-300 min-h-[220px]"
+                    >
+                        {/* Top Gradient Bar */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-400 to-indigo-400" />
+                        
+                        {/* Top Badge */}
+                        <span className="absolute top-4 right-4 px-3 py-1 rounded-full text-[9px] font-bold tracking-wider uppercase bg-sky-400/10 text-sky-300 border border-sky-400/30">
+                            QUICK JOIN
+                        </span>
+                        
+                        <div className="flex flex-col items-center justify-center w-full py-2">
+                            <div className="p-3.5 bg-sky-400/10 rounded-2xl text-sky-400 group-hover:scale-110 group-hover:bg-sky-400/20 transition-all mb-4">
+                                <Users size={30} />
+                            </div>
+
+                            <h3 className="text-xl font-extrabold text-white mb-2 tracking-wide text-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                                Join Room
+                            </h3>
+                            <p className="text-xs leading-relaxed text-slate-300/80 font-normal text-center max-w-[220px]">
+                                Enter an active 5-digit code to join a live match.
+                            </p>
+                        </div>
+                    </motion.div>
                 </motion.div>
             )}
 
@@ -290,15 +324,25 @@ export default function MultiplayerLobby({ playerName, onGameStart, onSoloMode, 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="w-full"
+                    className="w-full flex flex-col items-center gap-12 md:gap-16 pt-4 pb-8"
                 >
-                    <h2 className="text-lg font-semibold text-center mb-10 text-white/90 tracking-[0.2em] uppercase">SOLO TRAINING: Select Mode</h2>
-                    <ModeSelector onSelectMode={(mode) => onSoloMode(mode)} />
-                    <div className="mt-8 flex justify-center">
-                        <button onClick={() => setLobbyView('menu')} className="text-gray-500 hover:text-white text-sm uppercase tracking-widest transition-colors font-mono">
-                            [ Back To Menu ]
+                    <div className="w-full max-w-3xl flex items-center justify-between px-2 gap-4">
+                        <button
+                            onClick={() => setLobbyView('menu')}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/80 hover:bg-slate-800/90 border border-white/10 hover:border-purple-400/40 text-slate-200 hover:text-white text-xs font-semibold tracking-wider transition-all duration-300 shadow-xl backdrop-blur-2xl group shrink-0"
+                        >
+                            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform text-purple-400" />
+                            <span>Back to Menu</span>
                         </button>
+
+                        <h2 className="text-xl md:text-2xl font-black text-center text-white tracking-wide" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                            SOLO PRACTICE: Select Mode
+                        </h2>
+
+                        <div className="hidden sm:block w-[130px] shrink-0" />
                     </div>
+
+                    <ModeSelector onSelectMode={(mode) => onSoloMode(mode)} />
                 </motion.div>
             )}
 
@@ -309,15 +353,25 @@ export default function MultiplayerLobby({ playerName, onGameStart, onSoloMode, 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="w-full"
+                    className="w-full flex flex-col items-center gap-12 md:gap-16 pt-4 pb-8"
                 >
-                    <h2 className="text-lg font-semibold text-center mb-10 text-white/90 tracking-[0.2em] uppercase">Select Game Mode</h2>
-                    <ModeSelector onSelectMode={handleModeSelect} />
-                    <div className="mt-8 flex justify-center">
-                        <button onClick={() => setLobbyView('menu')} className="text-gray-500 hover:text-white text-sm uppercase tracking-widest transition-colors font-mono">
-                            [ Cancel ]
+                    <div className="w-full max-w-3xl flex items-center justify-between px-2 gap-4">
+                        <button
+                            onClick={() => setLobbyView('menu')}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/80 hover:bg-slate-800/90 border border-white/10 hover:border-purple-400/40 text-slate-200 hover:text-white text-xs font-semibold tracking-wider transition-all duration-300 shadow-xl backdrop-blur-2xl group shrink-0"
+                        >
+                            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform text-purple-400" />
+                            <span>Back to Menu</span>
                         </button>
+
+                        <h2 className="text-xl md:text-2xl font-black text-center text-white tracking-wide" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                            Select Game Mode
+                        </h2>
+
+                        <div className="hidden sm:block w-[130px] shrink-0" />
                     </div>
+
+                    <ModeSelector onSelectMode={handleModeSelect} />
                 </motion.div>
             )}
 
@@ -328,26 +382,26 @@ export default function MultiplayerLobby({ playerName, onGameStart, onSoloMode, 
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.98 }}
-                    className="w-full max-w-md p-10 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-xl"
+                    className="w-full max-w-md p-8 md:p-10 rounded-3xl border border-white/10 bg-slate-900/80 backdrop-blur-2xl shadow-2xl"
                 >
-                    <h2 className="text-sm font-semibold mb-8 text-center tracking-[0.2em] text-white/90 uppercase">ENTER ROOM CODE</h2>
-                    <form onSubmit={submitJoin} className="space-y-8">
+                    <h2 className="text-lg font-bold mb-6 text-center text-white/90 tracking-wide uppercase" style={{ fontFamily: "'Outfit', sans-serif" }}>ENTER ROOM CODE</h2>
+                    <form onSubmit={submitJoin} className="space-y-6">
                         <input
                             type="text"
                             value={joinCode}
                             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                             placeholder="ABC12"
                             maxLength={5}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 outline-none focus:border-white/30 transition-all text-2xl text-center tracking-[0.5em] font-mono placeholder:text-white/20"
+                            className="w-full bg-white/[0.05] border border-white/10 rounded-2xl px-4 py-4 outline-none focus:border-emerald-400/50 transition-all text-3xl text-center tracking-[0.4em] font-mono text-white placeholder:text-slate-600"
                             autoFocus
                         />
-                        <NeonButton type="submit" className="w-full" disabled={joinCode.trim().length !== 5 || isJoining} color="green">
-                            {isJoining ? 'JOINING...' : 'ACCESS'}
+                        <NeonButton type="submit" className="w-full text-base py-4" disabled={joinCode.trim().length !== 5 || isJoining} color="green">
+                            {isJoining ? 'JOINING...' : 'JOIN ROOM'}
                         </NeonButton>
                     </form>
                     <div className="mt-6 flex justify-center">
-                        <button onClick={() => setLobbyView('menu')} className="text-gray-500 hover:text-white text-sm uppercase tracking-widest transition-colors font-mono">
-                            [ Cancel ]
+                        <button onClick={() => setLobbyView('menu')} className="text-slate-400 hover:text-white text-xs uppercase tracking-wider transition-colors font-medium underline">
+                            Cancel
                         </button>
                     </div>
                 </motion.div>

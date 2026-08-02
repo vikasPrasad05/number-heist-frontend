@@ -20,12 +20,12 @@ export default function ScoreCounter({ score, combo, multiplier }: ScoreCounterP
     return (
         <div className="flex items-center gap-4">
             <div className="text-right">
-                <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+                <div className="text-xs uppercase tracking-wider text-slate-400 font-medium">
                     Score
                 </div>
                 <motion.div
-                    className="text-2xl font-bold tabular-nums"
-                    style={{ color: 'var(--neon-blue)', fontFamily: "'Orbitron', sans-serif" }}
+                    className="text-2xl font-bold tabular-nums text-sky-300"
+                    style={{ fontFamily: "'Outfit', sans-serif" }}
                 >
                     <motion.span>{displayScore}</motion.span>
                 </motion.div>
@@ -35,16 +35,16 @@ export default function ScoreCounter({ score, combo, multiplier }: ScoreCounterP
                 <motion.div
                     initial={{ scale: 0, rotate: -20 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    className="px-3 py-1 rounded-lg text-center"
+                    className="px-3 py-1 rounded-full text-center shadow-sm"
                     style={{
-                        background: 'rgba(0, 255, 136, 0.15)',
-                        border: '1px solid rgba(0, 255, 136, 0.4)',
+                        background: 'rgba(52, 211, 153, 0.15)',
+                        border: '1px solid rgba(52, 211, 153, 0.4)',
                     }}
                 >
-                    <div className="text-xs" style={{ color: 'var(--neon-green)' }}>
+                    <div className="text-xs font-bold text-emerald-300 font-sans">
                         {multiplier}x
                     </div>
-                    <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    <div className="text-[10px] text-slate-400 font-medium">
                         ×{combo} combo
                     </div>
                 </motion.div>

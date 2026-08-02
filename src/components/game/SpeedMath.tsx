@@ -39,18 +39,16 @@ export default function SpeedMath({ puzzle, onAnswer, locked = false }: SpeedMat
                 transition={{ duration: 0.3 }}
                 className="flex flex-col items-center gap-6"
             >
-                <div className="text-xs uppercase tracking-[0.3em] mb-2" style={{ color: 'var(--text-secondary)' }}>
+                <div className="text-xs uppercase tracking-wider text-slate-400 font-medium mb-2">
                     Solve the equation
                 </div>
 
                 <motion.div
-                    className="text-4xl md:text-6xl font-bold tracking-wider"
+                    className="text-4xl md:text-6xl font-extrabold tracking-wide text-sky-300"
                     style={{
-                        fontFamily: "'Orbitron', sans-serif",
-                        color: 'var(--neon-blue)',
-                        textShadow: '0 0 20px rgba(0, 212, 255, 0.4)',
+                        fontFamily: "'Outfit', sans-serif",
                     }}
-                    initial={{ scale: 0.5 }}
+                    initial={{ scale: 0.8 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                 >
@@ -64,12 +62,12 @@ export default function SpeedMath({ puzzle, onAnswer, locked = false }: SpeedMat
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Your answer"
-                        className="w-48 px-5 py-3 text-2xl text-center rounded-xl outline-none"
+                        className="w-56 px-6 py-4 text-3xl font-bold text-center rounded-2xl outline-none transition-all shadow-inner"
                         style={{
-                            background: 'rgba(0, 212, 255, 0.08)',
-                            border: '1px solid rgba(0, 212, 255, 0.3)',
-                            color: 'var(--text-primary)',
-                            fontFamily: "'Orbitron', sans-serif",
+                            background: 'rgba(56, 189, 248, 0.08)',
+                            border: '1.5px solid rgba(56, 189, 248, 0.3)',
+                            color: '#f8fafc',
+                            fontFamily: "'Outfit', sans-serif",
                             opacity: locked ? 0.5 : 1,
                         }}
                         disabled={locked}
@@ -78,16 +76,16 @@ export default function SpeedMath({ puzzle, onAnswer, locked = false }: SpeedMat
                     />
                     <motion.button
                         type="submit"
-                        className="px-8 py-3 rounded-xl font-semibold text-sm uppercase tracking-wider"
+                        className="px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wider shadow-lg"
                         style={{
-                            background: 'rgba(0, 255, 136, 0.15)',
-                            border: '1px solid rgba(0, 255, 136, 0.5)',
-                            color: 'var(--neon-green)',
-                            fontFamily: "'Orbitron', sans-serif",
+                            background: 'linear-gradient(135deg, rgba(52, 211, 153, 0.25) 0%, rgba(16, 185, 129, 0.25) 100%)',
+                            border: '1px solid rgba(52, 211, 153, 0.4)',
+                            color: '#34d399',
+                            fontFamily: "'Outfit', sans-serif",
                             opacity: locked ? 0.4 : 1,
                             pointerEvents: locked ? 'none' : 'auto',
                         }}
-                        whileHover={locked ? {} : { scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 136, 0.3)' }}
+                        whileHover={locked ? {} : { scale: 1.05, boxShadow: '0 8px 25px rgba(52, 211, 153, 0.25)' }}
                         whileTap={locked ? {} : { scale: 0.95 }}
                         disabled={locked}
                     >

@@ -5,7 +5,8 @@ import MultiplayerLobby from './components/game/MultiplayerLobby';
 import MultiplayerGameShell from './components/game/MultiplayerGameShell';
 import GameShell from './components/game/GameShell';
 import NeonButton from './components/ui/NeonButton';
-
+import DailyLeaderboard from './components/game/DailyLeaderboard';
+import { useLeaderboard } from './hooks/useLeaderboard';
 
 export default function App() {
   const [activeRoom, setActiveRoom] = useState<any | null>(null);
@@ -14,6 +15,7 @@ export default function App() {
   const [isNameSubmitted, setIsNameSubmitted] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [initialJoinCode, setInitialJoinCode] = useState<string | null>(null);
+  const leaderboard = useLeaderboard();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -80,51 +82,51 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center relative z-10">
-      <div className="flex flex-col items-center w-full px-4 py-8">
+    <main className="min-h-screen flex flex-col justify-between items-center relative z-10 py-10 px-4">
+      <div className="flex flex-col items-center w-full max-w-5xl mx-auto my-auto gap-8 md:gap-10">
+        {/* Main Title & Tagline */}
         <motion.div
-          initial={{ opacity: 0, y: -30 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-4"
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-center flex flex-col items-center gap-3"
         >
           <h1
-            className="text-5xl md:text-7xl lg:text-8xl font-black tracking-widest mb-2 cyber-title text-white"
+            className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight soft-gradient-accent drop-shadow-sm"
             style={{
-              fontFamily: "'Orbitron', sans-serif",
+              fontFamily: "'Outfit', sans-serif",
             }}
           >
-            NUMBER HEIST
+            NUM HEIST
           </h1>
           <motion.p
-            className="text-sm md:text-base tracking-[0.3em] uppercase"
-            style={{ color: 'var(--text-secondary)' }}
+            className="text-sm md:text-base tracking-widest text-slate-300/90 font-medium whitespace-nowrap text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            Hack the vault. Crack the code.
+            Master numbers. Sharpen your logic. Unlock your mind.
           </motion.p>
         </motion.div>
 
-
-
+        {/* Player Name Form or Player Tag + Cards Lobby */}
         <AnimatePresence mode="wait">
           {!isNameSubmitted ? (
             <motion.div
               key="name-entry"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              className="w-full max-w-md p-10 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-xl mb-8"
+              initial={{ opacity: 0, y: 15, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.4 }}
+              className="w-full max-w-md p-8 md:p-10 rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-2xl shadow-2xl"
             >
-              <h2 className="text-xl font-semibold mb-8 text-center tracking-[0.2em] text-white/90">
-                IDENTIFY YOURSELF
+              <h2 className="text-xl font-bold mb-6 text-center text-white/90 tracking-wide font-sans">
+                ENTER YOUR NAME
               </h2>
               <form onSubmit={handleNameSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="playerName" className="block text-xs uppercase tracking-[0.2em] mb-3 text-white/40">
-                    Agent Callsign
+                  <label htmlFor="playerName" className="block text-xs uppercase tracking-wider mb-2 text-slate-400 font-medium">
+                    Player Name
                   </label>
                   <input
                     type="text"
@@ -132,58 +134,72 @@ export default function App() {
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
                     placeholder="Enter your name..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 outline-none focus:border-white/30 transition-all text-lg font-mono text-center tracking-widest placeholder:text-white/20"
+                    className="w-full bg-white/[0.05] border border-white/10 rounded-2xl px-5 py-4 outline-none focus:border-purple-400/50 focus:bg-white/[0.08] transition-all text-lg font-medium text-center tracking-wide placeholder:text-slate-500 text-white"
                     autoComplete="off"
                     autoFocus
                   />
                 </div>
                 <NeonButton
                   type="submit"
-                  className="w-full"
+                  className="w-full py-4 text-base"
                   disabled={playerName.trim().length < 2}
-                  color="blue"
+                  color="purple"
+                  size="lg"
                 >
-                  INITIALIZE HACK
+                  START PLAYING
                 </NeonButton>
               </form>
             </motion.div>
           ) : (
-            <motion.div
-              key="multiplayer-lobby"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="w-full flex flex-col items-center"
-            >
-              <motion.div className="mb-12 flex items-center justify-center gap-4 bg-white/[0.02] px-6 py-3 rounded-full border border-white/5">
-                <span className="text-xs uppercase tracking-[0.2em] text-white/40">Active Agent:</span>
-                <span className="text-sm tracking-[0.2em] font-mono text-white/90">{playerName}</span>
+            <>
+              {/* Floating Top-Left Player Tag */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="fixed top-5 left-5 md:top-6 md:left-6 z-30 flex items-center gap-2.5 bg-slate-900/80 px-5 py-2.5 rounded-full border border-white/10 shadow-2xl backdrop-blur-2xl"
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold">Player:</span>
+                <span className="text-sm font-bold tracking-wide text-white">{playerName}</span>
                 <button
                   onClick={() => setIsNameSubmitted(false)}
-                  className="text-[10px] uppercase tracking-widest hover:text-white transition-colors opacity-30 hover:opacity-100 font-mono"
+                  className="text-xs tracking-wider text-purple-300/80 hover:text-purple-200 transition-colors ml-2 font-semibold underline"
                 >
-                  [Change]
+                  Change
                 </button>
               </motion.div>
 
-              <MultiplayerLobby
-                playerName={playerName}
-                initialJoinCode={initialJoinCode}
-                onGameStart={(room) => setActiveRoom(room)}
-                onSoloMode={(mode) => setSelectedSoloMode(mode)}
-                onBack={() => setIsNameSubmitted(false)}
-              />
-            </motion.div>
+              {/* Floating Top-Right 24H Daily Leaderboard */}
+              <DailyLeaderboard entries={leaderboard.entries} playerName={playerName} />
+
+              <motion.div
+                key="multiplayer-lobby"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="w-full flex flex-col items-center"
+              >
+                {/* Lobby Cards */}
+                <MultiplayerLobby
+                  playerName={playerName}
+                  initialJoinCode={initialJoinCode}
+                  onGameStart={(room) => setActiveRoom(room)}
+                  onSoloMode={(mode) => setSelectedSoloMode(mode)}
+                  onBack={() => setIsNameSubmitted(false)}
+                />
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
 
+        {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="mt-12 mb-6 text-center"
+          className="mt-6 text-center"
         >
-          <p className="text-xs" style={{ color: 'var(--text-secondary)', opacity: 0.5 }}>
-            Made by Vikas
+          <p className="text-xs text-slate-500 font-medium tracking-wider">
+            Crafted by Vikas
           </p>
         </motion.div>
       </div>

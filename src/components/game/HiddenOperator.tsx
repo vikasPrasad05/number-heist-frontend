@@ -45,24 +45,25 @@ export default function HiddenOperator({ puzzle, onAnswer, locked = false }: Hid
                 transition={{ duration: 0.3 }}
                 className="flex flex-col items-center gap-8"
             >
-                <div className="text-xs uppercase tracking-[0.3em]" style={{ color: 'var(--text-secondary)' }}>
+                <div className="text-xs uppercase tracking-wider text-slate-400 font-medium">
                     Find the missing operator
                 </div>
 
                 <div className="flex items-center gap-3 md:gap-5">
                     <motion.span
-                        className="text-4xl md:text-6xl font-bold"
-                        style={{ color: 'var(--neon-blue)', fontFamily: "'Orbitron', sans-serif" }}
+                        className="text-4xl md:text-6xl font-extrabold text-sky-300"
+                        style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
                         {puzzle.left}
                     </motion.span>
 
                     <motion.div
-                        className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-xl text-3xl font-bold"
+                        className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-2xl text-3xl font-bold"
                         style={{
-                            background: 'rgba(0, 255, 136, 0.1)',
-                            border: '2px dashed rgba(0, 255, 136, 0.5)',
-                            color: 'var(--neon-green)',
+                            background: 'rgba(52, 211, 153, 0.1)',
+                            border: '2px dashed rgba(52, 211, 153, 0.5)',
+                            color: '#34d399',
+                            fontFamily: "'Outfit', sans-serif",
                         }}
                         animate={{ scale: [1, 1.05, 1] }}
                         transition={{ repeat: Infinity, duration: 2 }}
@@ -71,25 +72,22 @@ export default function HiddenOperator({ puzzle, onAnswer, locked = false }: Hid
                     </motion.div>
 
                     <motion.span
-                        className="text-4xl md:text-6xl font-bold"
-                        style={{ color: 'var(--neon-blue)', fontFamily: "'Orbitron', sans-serif" }}
+                        className="text-4xl md:text-6xl font-extrabold text-sky-300"
+                        style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
                         {puzzle.right}
                     </motion.span>
 
                     <span
-                        className="text-4xl md:text-5xl font-bold"
-                        style={{ color: 'var(--text-secondary)' }}
+                        className="text-4xl md:text-5xl font-bold text-slate-400"
                     >
                         =
                     </span>
 
                     <motion.span
-                        className="text-4xl md:text-6xl font-bold"
+                        className="text-4xl md:text-6xl font-extrabold text-purple-300"
                         style={{
-                            color: 'var(--neon-purple)',
-                            fontFamily: "'Orbitron', sans-serif",
-                            textShadow: '0 0 15px rgba(180, 77, 255, 0.4)',
+                            fontFamily: "'Outfit', sans-serif",
                         }}
                     >
                         {puzzle.result}
@@ -101,27 +99,27 @@ export default function HiddenOperator({ puzzle, onAnswer, locked = false }: Hid
                         <motion.button
                             key={op}
                             onClick={() => { if (!locked) onAnswer(op === puzzle.answer); }}
-                            className="w-16 h-16 md:w-20 md:h-20 rounded-xl text-2xl md:text-3xl font-bold relative"
+                            className="w-16 h-16 md:w-20 md:h-20 rounded-2xl text-2xl md:text-3xl font-bold relative shadow-lg"
                             style={{
-                                background: 'rgba(0, 212, 255, 0.08)',
-                                border: '1px solid rgba(0, 212, 255, 0.3)',
-                                color: 'var(--neon-blue)',
-                                fontFamily: "'Orbitron', sans-serif",
+                                background: 'rgba(56, 189, 248, 0.08)',
+                                border: '1.5px solid rgba(56, 189, 248, 0.3)',
+                                color: '#38bdf8',
+                                fontFamily: "'Outfit', sans-serif",
                                 opacity: locked ? 0.4 : 1,
                                 pointerEvents: locked ? 'none' : 'auto',
                             }}
                             whileHover={locked ? {} : {
-                                scale: 1.1,
-                                background: 'rgba(0, 212, 255, 0.2)',
-                                boxShadow: '0 0 25px rgba(0, 212, 255, 0.3)',
+                                scale: 1.08,
+                                background: 'rgba(56, 189, 248, 0.18)',
+                                boxShadow: '0 8px 25px rgba(56, 189, 248, 0.25)',
                             }}
-                            whileTap={locked ? {} : { scale: 0.9 }}
-                            initial={{ opacity: 0, y: 20 }}
+                            whileTap={locked ? {} : { scale: 0.95 }}
+                            initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: locked ? 0.4 : 1, y: 0 }}
-                            transition={{ delay: i * 0.08 }}
+                            transition={{ delay: i * 0.06 }}
                             disabled={locked}
                         >
-                            <span className="absolute top-1 left-2 text-[10px]" style={{ color: 'var(--text-secondary)' }}>
+                            <span className="absolute top-1.5 left-2.5 text-[10px] text-slate-400 font-mono">
                                 {i + 1}
                             </span>
                             {operatorLabels[op]}

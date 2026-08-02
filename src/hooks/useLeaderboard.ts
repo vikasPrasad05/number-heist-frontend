@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import type { LeaderboardEntry, GameMode } from '../types/game';
 
 const STORAGE_KEY = 'number-heist-leaderboard';
-const MAX_ENTRIES = 20;
+const MAX_ENTRIES = 50;
 
 function loadLeaderboard(): LeaderboardEntry[] {
     if (typeof window === 'undefined') return [];
@@ -19,6 +19,9 @@ function loadLeaderboard(): LeaderboardEntry[] {
 function saveLeaderboard(entries: LeaderboardEntry[]): void {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('leaderboard_update'));
+        }
     } catch {
         // Storage full or unavailable
     }
@@ -28,7 +31,14 @@ export function useLeaderboard() {
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
 
     useEffect(() => {
-        setEntries(loadLeaderboard());
+        const update = () => setEntries(loadLeaderboard());
+        update();
+        window.addEventListener('leaderboard_update', update);
+        window.addEventListener('storage', update);
+        return () => {
+            window.removeEventListener('leaderboard_update', update);
+            window.removeEventListener('storage', update);
+        };
     }, []);
 
     const addEntry = useCallback((name: string, score: number, mode: GameMode, level: number, combo: number) => {

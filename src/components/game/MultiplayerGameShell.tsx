@@ -206,7 +206,7 @@ export default function MultiplayerGameShell({ roomState: initialRoomState, play
                 <GlassCard className="w-full max-w-lg p-8 text-center relative overflow-hidden" glow={didWin ? "green" : "red"}>
                     <div className="absolute inset-0 pointer-events-none opacity-20" style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,212,255,0.1) 2px, rgba(0,212,255,0.1) 4px)' }} />
 
-                    <h1 className={`text-4xl md:text-6xl font-black tracking-widest mb-4 ${color}`} style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                    <h1 className={`text-4xl md:text-6xl font-black tracking-wider mb-4 ${color}`} style={{ fontFamily: "'Outfit', sans-serif" }}>
                         {title}
                     </h1>
 

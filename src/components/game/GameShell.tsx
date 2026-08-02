@@ -138,6 +138,13 @@ export default function GameShell({ mode, playerName, onExit }: GameShellProps) 
         gameState.startGame(mode);
     }, [scoreHook, gameState, mode]);
 
+    const handleExitGame = useCallback(() => {
+        if (scoreHook.score > 0 && playerName && playerName.trim()) {
+            leaderboard.addEntry(playerName.trim(), scoreHook.score, mode, gameState.level, scoreHook.maxCombo);
+        }
+        onExit();
+    }, [scoreHook.score, playerName, mode, gameState.level, scoreHook.maxCombo, leaderboard, onExit]);
+
     // Cleanup
     useEffect(() => {
         return () => {
@@ -202,23 +209,24 @@ export default function GameShell({ mode, playerName, onExit }: GameShellProps) 
         <div className="min-h-screen flex flex-col relative">
             {/* Header Bar */}
             <div
-                className="sticky top-0 z-30 px-4 md:px-8 py-4"
+                className="sticky top-0 z-30 px-4 md:px-8 py-4 shadow-sm"
                 style={{
-                    background: 'rgba(10, 14, 23, 0.9)',
-                    borderBottom: '1px solid rgba(0, 212, 255, 0.1)',
-                    backdropFilter: 'blur(10px)',
+                    background: 'rgba(11, 15, 25, 0.75)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
                 }}
             >
                 <div className="max-w-4xl mx-auto">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-4">
                             <motion.button
-                                onClick={onExit}
-                                className="text-sm px-3 py-1 rounded-lg"
+                                onClick={handleExitGame}
+                                className="text-xs font-semibold px-4 py-2 rounded-full font-sans transition-all shadow-sm"
                                 style={{
-                                    background: 'rgba(255, 51, 102, 0.1)',
-                                    border: '1px solid rgba(255, 51, 102, 0.3)',
-                                    color: 'var(--neon-red)',
+                                    background: 'rgba(251, 113, 133, 0.12)',
+                                    border: '1px solid rgba(251, 113, 133, 0.3)',
+                                    color: '#fb7185',
                                 }}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -226,13 +234,13 @@ export default function GameShell({ mode, playerName, onExit }: GameShellProps) 
                                 ← Exit
                             </motion.button>
                             <div>
-                                <div className="text-[10px] uppercase tracking-widest opacity-50 mb-1">
-                                    Agent: <span style={{ color: 'var(--neon-green)' }}>{playerName}</span>
+                                <div className="text-[11px] uppercase tracking-wider text-slate-400 font-medium mb-0.5">
+                                    Player: <span style={{ color: '#34d399' }} className="font-semibold">{playerName}</span>
                                 </div>
-                                <div className="text-sm font-bold" style={{ color: 'var(--neon-blue)', fontFamily: "'Orbitron', sans-serif" }}>
+                                <div className="text-sm font-bold text-sky-300" style={{ fontFamily: "'Outfit', sans-serif" }}>
                                     {MODE_LABELS[mode]}
                                 </div>
-                                <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                                <div className="text-xs text-slate-400 font-medium">
                                     Level {gameState.level} • Q{gameState.questionsAnswered + 1}
                                 </div>
                             </div>
@@ -267,8 +275,8 @@ export default function GameShell({ mode, playerName, onExit }: GameShellProps) 
                             style={{
                                 background:
                                     gameState.feedbackState === 'correct'
-                                        ? 'radial-gradient(circle, rgba(0,255,136,0.1) 0%, transparent 70%)'
-                                        : 'radial-gradient(circle, rgba(255,51,102,0.1) 0%, transparent 70%)',
+                                        ? 'radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%)'
+                                        : 'radial-gradient(circle, rgba(251,113,133,0.12) 0%, transparent 70%)',
                             }}
                         />
                     </motion.div>
@@ -285,16 +293,15 @@ export default function GameShell({ mode, playerName, onExit }: GameShellProps) 
                         className="fixed top-24 left-0 right-0 z-30 flex justify-center pointer-events-none"
                     >
                         <div
-                            className="px-6 py-3 rounded-xl text-lg font-bold"
+                            className="px-6 py-2.5 rounded-full text-base font-bold shadow-xl backdrop-blur-xl"
                             style={{
-                                background: 'rgba(0, 255, 136, 0.2)',
-                                border: '1px solid rgba(0, 255, 136, 0.5)',
-                                color: 'var(--neon-green)',
-                                fontFamily: "'Orbitron', sans-serif",
-                                boxShadow: '0 0 30px rgba(0, 255, 136, 0.3)',
+                                background: 'rgba(52, 211, 153, 0.2)',
+                                border: '1px solid rgba(52, 211, 153, 0.5)',
+                                color: '#34d399',
+                                fontFamily: "'Outfit', sans-serif",
                             }}
                         >
-                            🔓 Level Up! → Level {gameState.level}
+                            🌟 Level Up! → Level {gameState.level}
                         </div>
                     </motion.div>
                 )}
